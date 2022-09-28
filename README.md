@@ -4,6 +4,8 @@
 
 ## 环境搭建
 
+安装 tlpi 依赖库：
+
 ```shell
 # 下载编译 tlpi 依赖库
 wget https://man7.org/tlpi/code/download/tlpi-201025-dist.tar.gz
@@ -20,12 +22,19 @@ sudo cp error_functions.h /usr/local/include/
 sudo cp ename.c.inc /usr/local/include/
 ```
 
+安装内核相关头文件与依赖库：
+
+```shell
+# redhat/centos/fedora
+yum install gcc kernel-devel glibc-devel libcap-devel libacl-devel
+```
+
 ## 编译程序
 
 以 `4_1.c` 为例介绍编译方法：
 
 ```shell
-gcc 4_1.c -o 4_1.out -l tlpi
+gcc 7_1.c -o 7_1.out -l tlpi
 ```
 
 参数 `-l tlpi` 表示在编译时，要将我们之前放入到系统依赖目录中的 `libtlpi.a` 静态库链接进来，如果缺少这个参数，部分使用了 `tlpi_hdr.h` 的程序将无法通过编译。
