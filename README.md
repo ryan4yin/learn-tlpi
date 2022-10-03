@@ -34,10 +34,13 @@ yum install gcc kernel-devel glibc-devel libcap-devel libacl-devel
 以 `4_1.c` 为例介绍编译方法：
 
 ```shell
-gcc 7_1.c -o 7_1.out -l tlpi
+export NAME=12_1
+gcc $NAME.c -o $NAME.out -l tlpi  -Wall
 ```
 
 参数 `-l tlpi` 表示在编译时，要将我们之前放入到系统依赖目录中的 `libtlpi.a` 静态库链接进来，如果缺少这个参数，部分使用了 `tlpi_hdr.h` 的程序将无法通过编译。
+
+而 `-Wall` 则表示显示所有 warning 级别的编译提示，这对判断运行期错误的位置跟原因很有帮助。
 
 使用该头文件与静态库的主要目的是与书中代码一致，写出来的代码也更简化些，降低了门槛。（实际上完全可以不依赖该静态库、不使用 `tlpi_hdr.h`）
 
