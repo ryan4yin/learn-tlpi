@@ -2,12 +2,15 @@
 编写程序列出所有正在运行的程序与其命令
 */
 
+#define _DEFAULT_SOURCE
+
 #include <fcntl.h>
 #include<sys/stat.h>
 #include<ctype.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <malloc.h>
+#include <dirent.h>
 #include <tlpi_hdr.h>
 
 
@@ -32,18 +35,37 @@ struct proc_node *parse_process_info(int pid);
 void print_process_tree(struct proc_node *head, int layer);
 
 
-FILE *f;
-struct stat s = {0};
-
-char file[BUF_SIZE] = {0};
-char buf[BUF_SIZE] = {0};
-struct proc_node *processes[BUF_SIZE] = {0};
-
-
 int main(int argc, char *argv[]) {
+    struct proc_node *processes[BUF_SIZE] = {0};
+
+    DIR *proc_dir = NULL;
+    struct dirent *tmp_dirent = NULL;
+    int n = 0;
+
+    proc_dir = opendir("/proc");
+    if (proc_dir == NULL)
+    {
+        errExit("opendir: /proc");
+    }
+
     int p_count = 0;
-    for(int i = 0; i < 65535; i++) {
-        struct proc_node *p = parse_process_info(i);
+    while ((tmp_dirent = readdir(proc_dir)) != NULL)
+    {
+        /*
+          the calling program should set errno to 0 before the
+          call, and then determine if an error occurred by checking whether
+          errno has a nonzero value after the call.
+       */
+        errno = 0;
+        n = strtol(tmp_dirent->d_name, NULL, 10);
+        if (errno != 0)
+        {
+            // d_name is not a process id, skip it
+            continue;
+        }
+
+        // parse process info
+        struct proc_node *p = parse_process_info(n);
         if (p == NULL) {
             continue;
         }
@@ -53,6 +75,7 @@ int main(int argc, char *argv[]) {
             errExit("process count exceeded limit!");
         }
     }
+    closedir(proc_dir);
 
     // sort by ppid
     qsort(processes, p_count, sizeof(struct proc_node *), comp_proc_node);
@@ -76,6 +99,11 @@ int main(int argc, char *argv[]) {
 
 
 struct proc_node *parse_process_info(int pid) { 
+    static char file[BUF_SIZE] = {0};
+    static char buf[BUF_SIZE] = {0};
+    static struct stat s = {0};
+
+    FILE *f;
     char *char_p = NULL;
 
     // 1. read process's status  
