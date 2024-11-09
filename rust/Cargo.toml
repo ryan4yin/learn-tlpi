@@ -1,0 +1,33 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+nix = "^0.29.0"
+
+
+# https://doc.rust-lang.org/stable/cargo/reference/cargo-targets.html#examples
+[[example]]
+name = "4_1"
+path = "examples/4_1.rs"
+doc-scrape-examples = true
+
+[package.metadata.example.4_1]
+name = "tee"
+description = "read from stdin and write to stdout and file"
+
+# =============
+
+[[example]]
+name = "4_2"
+path = "examples/4_2.rs"
+doc-scrape-examples = true
+
+[package.metadata.example.4_2]
+name = "copy"
+description = "copy file from src to dst"
+
+# =============
+

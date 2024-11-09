@@ -1,0 +1,8 @@
+default:
+  @just --list
+
+env:
+  nix develop
+
+run name:
+  cargo run --example {{name}}
