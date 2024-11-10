@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-
-nix = "^0.29.0"
+clap = {version = "=4.5.18", features = ["derive"]}
+# https://docs.rs/nix/latest/nix/index.html
+# https://docs.rs/libc/latest/libc/index.html
+nix = { version = "0.29.0", features = ["fs"] }
 
 
 # https://doc.rust-lang.org/stable/cargo/reference/cargo-targets.html#examples

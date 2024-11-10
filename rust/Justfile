@@ -4,5 +4,9 @@ default:
 env:
   nix develop
 
-run name:
-  cargo run --example {{name}}
+run name *args:
+  cargo run --example {{name}} {{args}}
+
+
+build name:
+  cargo build --example {{name}}
