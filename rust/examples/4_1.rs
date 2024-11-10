@@ -30,7 +30,7 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    let flags = if args.append {
+    let flag = if args.append {
         OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_APPEND
     } else {
         OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC
@@ -41,7 +41,7 @@ fn main() {
         .iter()
         .map(|name| {
             let path = Path::new(name);
-            let raw_fd = open(path, flags, mode).unwrap();
+            let raw_fd = open(path, flag, mode).unwrap();
             // This closes the file descriptor on drop.
             // So we do not need to close it manually.
             //
@@ -55,7 +55,7 @@ fn main() {
     let mut n;
     loop {
         n = read(stdin, &mut buffer).unwrap();
-        if n <= 0 {
+        if n == 0 {
             break;
         }
 
