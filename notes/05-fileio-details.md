@@ -99,6 +99,8 @@ if (flags & O_APPEND) {
 // 创建一个 oldfd 的副本, 返回新的文件描述符, 新文件描述符的 id 由系统自动分配
 int dup(int oldfd);
 // 跟 dup 类似, 优点是可以手动设定新文件描述符的 id
+// NOTE: 如果 newfd 所指定的文件描述符已经打开, 那么 dup2() 会首先将其关闭, 且忽略关闭操作触发的任何错误.
+// 因此更建议提前手动关闭 newfd 对应的文件描述符.
 int dup2(int oldfd, int newfd);
 // 跟 dup2 类似, 但可以设置新文件描述符的控制标志
 // 因为文件描述符目前只有一个 close-on-exec 标志, 所以 flags 参数也只能用于设置该标志
