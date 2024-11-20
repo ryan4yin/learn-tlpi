@@ -7,7 +7,6 @@ use nix::{
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::path::Path;
 
-// Copy standard input to each FILE, and also to standard output.
 #[derive(Parser)] // requires `derive` feature
 #[command(version, about, long_about = None)]
 struct Cli {
