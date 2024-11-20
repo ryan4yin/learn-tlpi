@@ -8,40 +8,6 @@ use std::path::Path;
 
 const MAX_BYTES: usize = 4096;
 
-/*
-# 文件大小为 10.5 MB
-› ls file_with_hole.txt
-╭───┬────────────────────┬──────┬─────────┬──────────────╮
-│ # │        name        │ type │  size   │   modified   │
-├───┼────────────────────┼──────┼─────────┼──────────────┤
-│ 0 │ file_with_hole.txt │ file │ 10.5 MB │ a minute ago │
-╰───┴────────────────────┴──────┴─────────┴──────────────╯
-
-# 但是实际占用的磁盘空间只有 8 KB
-› ^du -sh file_with_hole.txt
-8.0K    file_with_hole.txt
-
-# 使用 cp 与 rsync 分别复制文件
-› cp file_with_hole.txt file_with_hole_cp.txt
-› rsync file_with_hole.txt file_with_hole_rsync.txt
-
-# 查看复制后的文件大小
-› ls *.txt
-╭───┬──────────────────────────┬──────┬─────────┬───────────────╮
-│ # │           name           │ type │  size   │   modified    │
-├───┼──────────────────────────┼──────┼─────────┼───────────────┤
-│ 0 │ file_with_hole.txt       │ file │ 10.5 MB │ 4 minutes ago │
-│ 1 │ file_with_hole_cp.txt    │ file │ 10.5 MB │ now           │
-│ 2 │ file_with_hole_rsync.txt │ file │ 10.5 MB │ now           │
-╰───┴──────────────────────────┴──────┴─────────┴───────────────╯
-
-# 查看复制后的文件占用的磁盘空间
-# cp 正确处理了文件空洞，而 rsync 则没有
-› ^du -sh *.txt
-8.0K    file_with_hole.txt
-8.0K    file_with_hole_cp.txt
-11M     file_with_hole_rsync.txt
-*/
 fn generate_file_with_hole() {
     let str1 = "it is a dream that will never come true...\n";
     let str2 = "\nbut never give up, always try to do something meaningful...\n";
