@@ -13,7 +13,7 @@
 
 上述内核事件也称为传统信号或标准信号, 编号 1-31.
 
-Linux 中除了标准信号外, 还有一种叫做实时信号, 后面会详细介绍.
+Linux 中除了**标准信号**外, 还有一种叫做**实时信号**, 后面会详细介绍.
 
 ## 信号的处理
 
@@ -45,7 +45,30 @@ Linux 中除了标准信号外, 还有一种叫做实时信号, 后面会详细�
    - 这说明 neovim 在 SIGSEGV 信号的处理函数中调用了 abort() 函数, 它会产生一个 SIGABRT 信号, 进而使
      内核生成 coredump 文件.
 
-## 信号类型与默认行为
+### 各编程语言中的 UNIX 信号处理
+
+#### 1. Python
+
+> https://docs.python.org/3/library/signal.html
+
+默认的处理程序：
+
+- SIGPIPE 被忽略（因此管道和套接字上的写入错误可以报告为普通的 Python 异常）
+- 如果父进程没有更改 SIGINT ，则其会被翻译成 KeyboardInterrupt 异常。
+
+#### 2. Java
+
+> https://docs.oracle.com/en/java/javase/17/troubleshoot/handle-signals-and-exceptions.html
+
+| Signal                                             | Description                                                                                                                                                                                                                 |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SIGSEGV`, `SIGBUS`, `SIGFPE`, `SIGPIPE`, `SIGILL` | These signals are used in the implementation for implicit null check, and so forth.                                                                                                                                         |
+| `SIGQUIT`                                          | This signal is used to dump Java stack traces to the standard error stream. (Optional)                                                                                                                                      |
+| `SIGTERM`, `SIGINT`, `SIGHUP`                      | These signals are used to support the shutdown hook mechanism (`java.lang.Runtime.addShutdownHook`) when the VM is terminated abnormally. (Optional)                                                                        |
+| `SIGUSR2`                                          | This signal is used internally on Linux and macOS.                                                                                                                                                                          |
+| `SIGABRT`                                          | The HotSpot VM does not handle this signal. Instead, it calls the `abort` function after fatal error handling. If an application uses this signal, then it should terminate the process to preserve the expected semantics. |
+
+## Linux 标准信号
 
 两个无法被捕获或忽略的信号:
 
@@ -57,33 +80,60 @@ Linux 中除了标准信号外, 还有一种叫做实时信号, 后面会详细�
   - 默认行为: 停止进程
   - 无法被捕获或忽略, 用于暂停进程.
 
-其他信号:
 
-- SIGABRT
-  - 默认行为: 终止进程并生成 coredump 文件.
-  - 由 abort() 函数调用引发.
-- SIGALRM
-  - 默认行为: 无
-  - 由 alarm() 或 setitimer() 函数调用引发.
-- SIGBUS
-  - 默认行为: 无
-  - 由硬件错误引发, 如内存访问越界.
-- SIGCHLD
-  - 默认行为: 忽略
-  - 子进程退出时向父进程发送.
-- SIGCONT
-  - 默认行为: 恢复进程
-  - 由 SIGSTOP 或 SIGTSTP 信号后恢复进程.
-- SIGFPE
-  - 默认行为: 无
-  - 由除零错误引发.
-- SIGHUP
-  - 默认行为: 无
-  - 当终端断开时发送给进程. 另外此信号也常被 nginx 等守护进程用于重新加载配置, 系统管理员可手动发送
-    此信号给进程以触发配置重载.
-- SIGILL
-  - 默认行为: 无
-  - 由非法指令引发.
+所有标准信号, 及其默认行为:
+
+> 从 [man 7 signal][man 7 signal] 中摘录
+
+```
+Signal      Standard   Action   Comment
+────────────────────────────────────────────────────────────────────────
+SIGABRT      P1990      Core    Abort signal from abort(3)
+SIGALRM      P1990      Term    Timer signal from alarm(2)
+SIGBUS       P2001      Core    Bus error (bad memory access)
+SIGCHLD      P1990      Ign     Child stopped or terminated
+SIGCLD         -        Ign     A synonym for SIGCHLD
+SIGCONT      P1990      Cont    Continue if stopped
+SIGEMT         -        Term    Emulator trap
+SIGFPE       P1990      Core    Floating-point exception
+SIGHUP       P1990      Term    Hangup detected on controlling terminal
+                                or death of controlling process
+SIGILL       P1990      Core    Illegal Instruction
+SIGINFO        -                A synonym for SIGPWR
+SIGINT       P1990      Term    Interrupt from keyboard
+SIGIO          -        Term    I/O now possible (4.2BSD)
+SIGIOT         -        Core    IOT trap. A synonym for SIGABRT
+SIGKILL      P1990      Term    Kill signal
+SIGLOST        -        Term    File lock lost (unused)
+SIGPIPE      P1990      Term    Broken pipe: write to pipe with no
+                                readers; see pipe(7)
+SIGPOLL      P2001      Term    Pollable event (Sys V);
+                                synonym for SIGIO
+SIGPROF      P2001      Term    Profiling timer expired
+SIGPWR         -        Term    Power failure (System V)
+SIGQUIT      P1990      Core    Quit from keyboard
+SIGSEGV      P1990      Core    Invalid memory reference
+SIGSTKFLT      -        Term    Stack fault on coprocessor (unused)
+SIGSTOP      P1990      Stop    Stop process
+SIGTSTP      P1990      Stop    Stop typed at terminal
+SIGSYS       P2001      Core    Bad system call (SVr4);
+                                see also seccomp(2)
+SIGTERM      P1990      Term    Termination signal
+SIGTRAP      P2001      Core    Trace/breakpoint trap
+SIGTTIN      P1990      Stop    Terminal input for background process
+SIGTTOU      P1990      Stop    Terminal output for background process
+SIGUNUSED      -        Core    Synonymous with SIGSYS
+SIGURG       P2001      Ign     Urgent condition on socket (4.2BSD)
+SIGUSR1      P1990      Term    User-defined signal 1
+SIGUSR2      P1990      Term    User-defined signal 2
+SIGVTALRM    P2001      Term    Virtual alarm clock (4.2BSD)
+SIGXCPU      P2001      Core    CPU time limit exceeded (4.2BSD);
+                                see setrlimit(2)
+SIGXFSZ      P2001      Core    File size limit exceeded (4.2BSD);
+                                see setrlimit(2)
+SIGWINCH       -        Ign     Window resize signal (4.3BSD, Sun)
+```
+
 
 ## 自定义信号处理器
 
@@ -151,3 +201,5 @@ int sigpending(sigset_t *set);
 int pause(void);
 ```
 
+
+[man 7 signal]: https://man7.org/linux/man-pages/man7/signal.7.html
