@@ -186,8 +186,10 @@ union sigval {
 
 - `SIGEV_NONE`: 定时器超时时不做任何通知. 但可以通过 `timer_gettime()` 获取定时器的超时情况.
 - `SIGEV_SIGNAL`: 定时器超时时发送 `sigev_signo` 指定的信号.
-- `SIGEV_THREAD`: 定时器超时时调用 `sigev_notify_function` 函数. 就像它是一个线程的启动函数一样(? 没理解)
-- `SIGEV_THREAD_ID`(Linux-specific): 与 `SIGEV_SIGNAL` 类似, 但信号会被发送到 `sigev_notify_thread_id` 指定的线程.
+- `SIGEV_THREAD`: 定时器超时时调用 `sigev_notify_function` 函数. 就像它是一个线程的启动函数一样(? 没
+  理解)
+- `SIGEV_THREAD_ID`(Linux-specific): 与 `SIGEV_SIGNAL` 类似, 但信号会被发送到
+  `sigev_notify_thread_id` 指定的线程.
   - 这个 flag 仅供线程库使用, 应用程序不应该使用这个 flag.
 
 ## timerfd API
@@ -206,3 +208,19 @@ int timerfd_settime(int fd, int flags, const struct itimerspec *new_value, struc
 // 查询定时器的超时时间和间隔时间
 int timerfd_gettime(int fd, struct itimerspec *curr_value);
 ```
+
+### 多线程下的定时器
+
+当调用 fork 时, 子进程会继承父进程的文件描述符, 因此子进程将与父进程共享同一个定时器文件描述符. 在调
+用 exec 时, 新进程也会继承父进程的 timerfd 文件描述符.
+
+### 从 timerfd 文件描述符中读取信息
+
+可以直接使用 read 调用来读取 timerfd 文件描述符.
+
+如果发起 read 调用前, 定时器已经超时, 则 read 会立即返回, 并返回一个 8 字节的整数表示自定时器创建以
+来或者上次 read 调用后, 定时器超时的次数.
+
+如果发起 read 调用后, 定时器还未超时, 则 read 调用会阻塞, 直到定时器超时.
+
+因此 read 调用的目标缓冲区的大小必须至少为 8 字节.
