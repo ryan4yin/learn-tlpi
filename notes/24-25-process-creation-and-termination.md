@@ -70,4 +70,29 @@ void exit(int status);
 
 ### Exit Handlers
 
-有时候，一个应用程序
+有时候，应用程序会需要在进程终止时执行一些清理工作，比如释放内存、关闭文件描述符等，这就是 exit handler 的功能。
+
+```c
+#include <stdlib.h>
+
+// 注册一个 exit handler 函数
+int atexit(void (*function)(void));
+
+// 跟 atexit() 类似，但是
+//  1. 可以传递一个参数给 exit handler 函数
+//  2. exit handler 函数在被调用时会接收到进程的终止状态(int)
+int on_exit(void (*function)(int, void *), void *arg);
+```
+
+### fork(), stdio buffers 与 _exit() 之间的交互
+
+1. fork() 会复制父进程的 stdio buffers, 导致子进程拥有了父进程 stdio buffers 的副本.
+2. 当父子进程在这之后调用 exit() 或 fflush() 时，会导致内容一致的 stdio buffers 被两次刷新到文件中，这会导致输出重复.
+
+解决办法：
+
+1. 父进程在调用 fork() 之前，先调用 fflush() 刷新 stdio buffers，避免子进程继承到脏数据.
+2. 在子进程中调用 `_exit()` 来终止进程，而不是调用 `exit()`. 这样子进程就不会执行 stdio buffers 的刷新操作.
+
+
+
