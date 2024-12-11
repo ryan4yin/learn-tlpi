@@ -33,7 +33,7 @@ clone() 也是容器隔离技术的基础, 它可以通过 flags 控制新进程
 
 // 创建新进程
 // 第一个函数参数是新进程的入口函数
-// 第二个参数是新进程的栈空间
+// 第二个参数是新进程的栈空间顶部指针
 // 第三个参数是 flags, 用于控制新进程与父进程之间的资源共享程度
 // 第四个参数是传递给新进程入口函数的参数
 int clone(int (*fn)(void *_Nullable), void *stack, int flags,
@@ -41,6 +41,9 @@ int clone(int (*fn)(void *_Nullable), void *stack, int flags,
                                       void *_Nullable tls,
                                       pid_t *_Nullable child_tid */ );
 ```
+
+> C 标准中实际并未对将数据从 void * 与 int 等具体类型之间的强制转换做出规定，但大部分 C 编译器都能保证 `int j == (int) ((void *) j)` 这种转换是安全的.
+> clone() 函数就是利用了这一点, 通过 void * 类型的参数传递任意类型的参数. 
 
 因为 clone() 函数创建的新进程可能与父进程共享内存空间, 因此它不能直接使用父进程的栈空间(那样会导致父
 进程的栈空间被破坏). 因此, 在调用 clone() 函数时, 需要为新进程分配一个新的栈空间, 该栈空间通常是通过
