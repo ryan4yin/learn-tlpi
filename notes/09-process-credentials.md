@@ -8,7 +8,7 @@
 - **file-system** user ID and group ID (Linux-specific);
 - **supplementary group IDs**.
 
-## real user ID 与 gorup ID
+## real user ID 与 group ID
 
 这个应该是最容易理解的, 就是进程被运行时的用户 ID 与组 ID.
 
@@ -98,7 +98,7 @@ chmod g-s xxx
 
 > **应以最小的权限执行各类任务, 仅在必要的时候才提升权限执行操作.**
 
-为了实现这一功能, UNIX 专门设计了 saved user ID 与 gorup ID 这一组 ID, 它的工作方式如下:
+为了实现这一功能, UNIX 专门设计了 saved user ID 与 group ID 这一组 ID, 它的工作方式如下:
 
 - 在 Set-User-ID/Set-Group-ID 程序启动时, 会将进程的 effective user/group ID 设置为该程序二进制文件
   的 owner user/group ID

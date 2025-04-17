@@ -26,7 +26,7 @@ NPTL 则是 Pthreads API 的新实现，它充分利用了 Linux 内核的线程
 - 控制终端
 - 进程凭证
 - 打开的文件描述符
-- 由 fnctl 创建的记录锁(record lock)
+- 由 fcntl 创建的记录锁(record lock)
 - 信号处置
 - 文件系统相关信息: 文件权限, 当前工作目录, 根目录.
 - 间隔定时器(setitimer与 POSIX 定时器(timer_create)

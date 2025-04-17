@@ -45,7 +45,7 @@ void _exit(int status);
 void exit(int status);
 ```
 
-`eixt()` 函数在终止进程之间 会先干这些事情：
+`exit()` 函数在终止进程之间 会先干这些事情：
 
 - 调用由 `atexit()` / `on_exit()` 等函数注册的 exit handler 函数.
 - 刷新所有 stdio 流的缓存区.

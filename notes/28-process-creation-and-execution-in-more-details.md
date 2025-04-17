@@ -152,7 +152,7 @@ POSIX Threads:
 | Thread cancelability state and type | No     | Yes       | After an `exec()`, the cancelability type and state are reset to `PTHREAD_CANCEL_ENABLE` and `PTHREAD_CANCEL_DEFERRED`, respectively |
 | Mutexes and condition variables     | No     | Yes       | See Section 33.3 for details of the treatment of mutexes and other thread resources during `fork()`.                                 |
 
-Pritority and scheduling:
+Priority and scheduling:
 
 | Process attribute              | exec() | fork() | Interfaces affecting attribute; additional notes |
 | ------------------------------ | ------ | ------ | ------------------------------------------------ |

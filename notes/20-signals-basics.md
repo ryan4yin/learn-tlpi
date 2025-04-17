@@ -39,7 +39,7 @@ Linux 中除了**标准信号**外, 还有一种叫做**实时信号**, 后面�
 ### 使用信号的案例
 
 1. 通过 `kill -9` 命令强制杀死进程.
-2. Nginx/Promehteus 等服务通过 `SIGHUP` 信号重新加载配置.
+2. Nginx/Prometheus 等服务通过 `SIGHUP` 信号重新加载配置.
 3. `Ctrl-C` 信号终止正在运行的程序.
 4. neovim 在程序崩溃时会生成 coredump 文件.
    - 这说明 neovim 在 SIGSEGV 信号的处理函数中调用了 abort() 函数, 它会产生一个 SIGABRT 信号, 进而使
