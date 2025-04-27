@@ -6,7 +6,7 @@
 
 这也是 Rust 语言最大的创新点, 它通过所有权系统和借用系统来自动管理内存的分配与释放, 从而避免了内存泄漏和内存溢出等问题.
 
-## 堆内存分配
+## 动态内存分配
 
 ```c
 #include <stdlib.h>
@@ -22,6 +22,9 @@ void *calloc(size_t nmemb, size_t size);
 void *realloc(void *ptr, size_t size);
 void free(void *ptr);
 ```
+
+glibc 的 `malloc()` 底层是基于 `mmap()`、`brk()`、`sbrk()` 等系统调用实现的，具体使用哪一个则取决于申请的内存大小。
+`mmap()` 主要被用于申请分配大块内存（直接按页分配内存），而 `brk()` 则适合更小的内存块分配。
 
 ## 栈内存分配
 
