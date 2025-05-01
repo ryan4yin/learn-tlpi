@@ -272,7 +272,7 @@ https://docs.kernel.org/scheduler/sched-eevdf.html
 
 ## Linux 可拓展调度器
 
-sched_ext 是一个 Linux 内核中的调度器，它的行为可通过 BPF 程序去定义，从而实现相当灵活的调度策略实验与切换。
+sched_ext 是 Linux 6.12 版本正式引入的新调度器，它的行为可通过 eBPF 程序去定义，实现调度逻辑的动态更新，从而实现相当灵活的调度策略实验与切换。
 
 官方文档：
 
