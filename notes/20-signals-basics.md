@@ -11,7 +11,7 @@
 - 发生了软件事件
   - 例如, 针对文件描述符的 I/O 事件, 定时器到期, CPU 时间片用完, 子进程退出等
 
-上述内核事件也称为传统信号或标准信号, 编号 1-31.
+上述内核事件也称为传统信号或**标准信号**, 编号 1-31.
 
 Linux 中除了**标准信号**外, 还有一种叫做**实时信号**, 后面会详细介绍.
 
@@ -36,52 +36,18 @@ Linux 中除了**标准信号**外, 还有一种叫做**实时信号**, 后面�
 2. 忽略信号
 3. 执行预先定义的信号处理函数
 
-### 使用信号的案例
-
-1. 通过 `kill -9` 命令强制杀死进程.
-2. Nginx/Prometheus 等服务通过 `SIGHUP` 信号重新加载配置.
-3. `Ctrl-C` 信号终止正在运行的程序.
-4. neovim 在程序崩溃时会生成 coredump 文件.
-   - 这说明 neovim 在 SIGSEGV 信号的处理函数中调用了 abort() 函数, 它会产生一个 SIGABRT 信号, 进而使
-     内核生成 coredump 文件.
-
-### 各编程语言中的 UNIX 信号处理
-
-#### 1. Python
-
-> https://docs.python.org/3/library/signal.html
-
-默认的处理程序：
-
-- SIGPIPE 被忽略（因此管道和套接字上的写入错误可以报告为普通的 Python 异常）
-- 如果父进程没有更改 SIGINT ，则其会被翻译成 KeyboardInterrupt 异常。
-
-#### 2. Java
-
-> https://docs.oracle.com/en/java/javase/17/troubleshoot/handle-signals-and-exceptions.html
-
-| Signal                                             | Description                                                                                                                                                                                                                 |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SIGSEGV`, `SIGBUS`, `SIGFPE`, `SIGPIPE`, `SIGILL` | These signals are used in the implementation for implicit null check, and so forth.                                                                                                                                         |
-| `SIGQUIT`                                          | This signal is used to dump Java stack traces to the standard error stream. (Optional)                                                                                                                                      |
-| `SIGTERM`, `SIGINT`, `SIGHUP`                      | These signals are used to support the shutdown hook mechanism (`java.lang.Runtime.addShutdownHook`) when the VM is terminated abnormally. (Optional)                                                                        |
-| `SIGUSR2`                                          | This signal is used internally on Linux and macOS.                                                                                                                                                                          |
-| `SIGABRT`                                          | The HotSpot VM does not handle this signal. Instead, it calls the `abort` function after fatal error handling. If an application uses this signal, then it should terminate the process to preserve the expected semantics. |
-
 ## Linux 标准信号
 
-两个无法被捕获或忽略的信号:
+首先介绍两个无法被捕获或忽略的信号:
 
 - SIGKILL
   - 默认行为: 终止进程
-  - 无法被捕获或忽略, 用于强制终止进程. 除非进程卡在硬件相关的 I/O 操作上, 否则 SIGKILL 信号会立即终
-    止进程.
+  - 无法被捕获或忽略, 用于强制终止进程. 除非进程卡在硬件相关的 I/O 操作上, 否则 SIGKILL 信号会立即终止进程.
 - SIGSTOP
   - 默认行为: 停止进程
   - 无法被捕获或忽略, 用于暂停进程.
 
-
-所有标准信号, 及其默认行为:
+如下是 Linux 的所有标准信号, 及其默认行为（Action）:
 
 > 从 [man 7 signal][man 7 signal] 中摘录
 
@@ -134,11 +100,97 @@ SIGXFSZ      P2001      Core    File size limit exceeded (4.2BSD);
 SIGWINCH       -        Ign     Window resize signal (4.3BSD, Sun)
 ```
 
+## 使用信号的案例
+
+1. 通过 `kill -9` 命令强制杀死进程.
+2. Nginx/Prometheus 等服务通过 `SIGHUP` 信号重新加载配置.
+3. `Ctrl-C` 信号终止正在运行的程序.
+4. neovim 在程序崩溃时会生成 coredump 文件.
+   - 这说明 neovim 在 SIGSEGV 信号的处理函数中调用了 abort() 函数, 它会产生一个 SIGABRT 信号, 进而使内核生成 coredump 文件.
+
+### 进程的优雅退出
+
+与状态相关的程序通常都会希望在收到退出信号后，执行一些清理动作，然后再自行结束运行，这通常通过捕获
+`SIGTERM` 信号来实现。
+
+跟据前面的表格，`SIGTERM` 信号默认的处理方式是
+`Term`，也就是终止进程。如果希望在终止前执行一些清理动作，就需要捕获该信号，执行对应的清理函数。
+
+举例来说，Kubernetes 中 Delete 一个 Pod 的标准流程为：
+
+- Pod 状态被设为 Terminating，同时 Pod 被从 EndpointSlice 中移除
+- 执行 preStop hook
+- preStop 执行完毕后，向容器进程发送 `SIGTERM` 信号
+- 等待进程主动退出，或者 `spec.terminationGracePeriodSeconds`
+  超时（该超时从 Pod 被 Terminate 开始计数，也包含 preStop 执行的时间）。
+
+那么就有如下几种方式实现一个进程的优雅退出：
+
+- 对于无状态且自身未实现 `SIGTERM` 信号处理函数的 APP，可以通过 `preStop`
+  来阻塞 Terminate 动作，同时调高 `spec.terminationGracePeriodSeconds`
+  超时时间，直到所有旧的请求都执行完毕，连接都断开。
+  - Istio 就有提供类似的实现方式
+- 对于其他情况，则必须在应用程序中通过 `SIGTERM` 信号处理函数 + 调整
+  `spec.terminationGracePeriodSeconds` 超时来实现相关功能。
+
+## 各编程语言中的 UNIX 信号处理
+
+### 1. Go
+
+> https://pkg.go.dev/os/signal
+
+Go 语言将信号分为两类：
+
+- 同步信号：即由程序自身错误导致的信号，与程序逻辑强相关，如 SIGSEGV, SIGFEF.
+- 异步信号：除同步信号外的所有信号，通常由外部环境触发，譬如在收到 SIGTERM 后用于处理程序的优雅退出。
+
+Go 程序收到 Linux Signal 后的默认行为：
+
+| 信号（Signal(s)）                                            | 行为（Behavior）                                                                                    |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| 同步信号（Synchronous signal）                               | 转换为运行时恐慌（run-time panic），无法通过 `os/signal.Notify` lf捕获，必须通过恢复 panic 来处理。 |
+| SIGHUP, SIGINT, SIGTERM                                      | 程序退出（program exit）                                                                            |
+| SIGQUIT, SIGILL, SIGTRAP, SIGABRT, SIGSTKFLT, SIGEMT, SIGSYS | 程序退出并生成堆栈转储（exit with stack dump）                                                      |
+| SIGTSTP, SIGTTIN, SIGTTOU                                    | 系统默认行为（通常由 shell 用于作业控制）                                                           |
+| SIGPROF                                                      | 由 Go 运行时直接处理（用于实现 `runtime.CPUProfile`）                                               |
+| 其他信号（Other signals）                                    | 捕获但不采取任何操作（caught but no action）                                                        |
+
+相关文章：[Graceful Shutdown in Go: Practical Patterns - victoriametrics](https://victoriametrics.com/blog/go-graceful-shutdown/)
+
+### 2. Rust
+
+> https://github.com/vorner/signal-hook
+
+Rust 比 Go 要更原生，所以它应该默认是遵循平台本身的信号处理逻辑，可以直接对照前面的表格。
+
+如果需要自行处理信号，可使用第三方库完成。
+
+#### 3. Python
+
+> https://docs.python.org/3/library/signal.html
+
+默认的处理程序：
+
+- SIGPIPE 被忽略（因此管道和套接字上的写入错误可以报告为普通的 Python 异常）
+- 如果父进程没有更改 SIGINT ，则其会被翻译成 KeyboardInterrupt 异常。
+
+除了这几条外，貌似 Python 的信号处理方式也完全遵循 Linux 对信号的定义。
+
+#### 4. Java
+
+> https://docs.oracle.com/en/java/javase/17/troubleshoot/handle-signals-and-exceptions.html
+
+| Signal                                             | Description                                                                                                                                                                                                                 |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SIGSEGV`, `SIGBUS`, `SIGFPE`, `SIGPIPE`, `SIGILL` | These signals are used in the implementation for implicit null check, and so forth.                                                                                                                                         |
+| `SIGQUIT`                                          | This signal is used to dump Java stack traces to the standard error stream. (Optional)                                                                                                                                      |
+| `SIGTERM`, `SIGINT`, `SIGHUP`                      | These signals are used to support the shutdown hook mechanism (`java.lang.Runtime.addShutdownHook`) when the VM is terminated abnormally. (Optional)                                                                        |
+| `SIGUSR2`                                          | This signal is used internally on Linux and macOS.                                                                                                                                                                          |
+| `SIGABRT`                                          | The HotSpot VM does not handle this signal. Instead, it calls the `abort` function after fatal error handling. If an application uses this signal, then it should terminate the process to preserve the expected semantics. |
 
 ## 自定义信号处理器
 
-当信号发生时, 内核会中断主进程程序, 调用进程注册的信号处理函数, 处理函数执行完毕后, 再返回到主进程程
-序中继续执行. 这也是信号被称为软中断的原因.
+当信号发生时, 内核会中断主进程程序, 调用进程注册的信号处理函数, 处理函数执行完毕后, 再返回到主进程程序中继续执行. 这也是信号被称为软中断的原因.
 
 有两个系统调用可以用于注册信号处理函数:
 
@@ -200,6 +252,5 @@ int sigpending(sigset_t *set);
 // 暂停进程, 直到收到一个信号
 int pause(void);
 ```
-
 
 [man 7 signal]: https://man7.org/linux/man-pages/man7/signal.7.html
