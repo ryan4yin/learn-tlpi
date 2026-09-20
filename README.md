@@ -7,7 +7,7 @@ Anwser for the exercises in the book:
 
 - [c version](./c)
 - [rust version](./rust)
-
+- [Linux desktop system notes](./linux-desktop/)
 
 ## References
 
