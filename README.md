@@ -1,17 +1,11 @@
-# The Linux Programming Interface
+# Learn Linux
 
-- [List of source code files, by chapter, from The Linux Programming Interface](https://man7.org/tlpi/code/online/all_files_by_chapter.html)
-- [Linux and glibc API changes since publication](https://man7.org/tlpi/api_changes/index.html)
+Notes and experiments from learning how Linux works, from userspace APIs to the desktop stack and
+kernel internals.
 
-Anwser for the exercises in the book:
+## Topics
 
-- [c version](./c)
-- [rust version](./rust)
-- [Linux desktop system notes](./linux-desktop/)
-
-## References
-
-I use the following resources to help me check my answers:
-
-- https://github.com/garyparrot/TLPI-exercise
-- https://github.com/posborne/linux-programming-interface-exercises
+- [The Linux Programming Interface](./tlpi/): chapter notes and exercises in C and Rust
+- [Linux desktop](./linux-desktop/): a system-oriented guide to the Linux desktop stack
+- [Understanding the Linux Kernel](./understand-linux-kernel/): kernel source-reading notes and
+  development environment
